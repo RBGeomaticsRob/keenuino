@@ -2,9 +2,10 @@
 #include <Bridge.h>
 #include <ApiClient.h>
 #include <KeenClient.h>
-#include "keys.h"
+#include <keys.h>
 
-int totalAnlgSensors = 5;
+const int totalAnlgSensors = 5;
+const String collectionName = "readings"
 
 KeenClient keen;
 
@@ -24,9 +25,9 @@ void loop() {
   
   convertArrayValues(&sensorValues);
   
-  jsonWriteString = compileJSON(sensorValues);
+  jsonWriteString = compileJSON(&sensorValues);
   
-  keenWrite(jsonWriteString);
+  keenWrite(collectionName, jsonWriteString);
   
   delay(30000);
 }
@@ -57,18 +58,18 @@ float convertValue(float sensorValue){
   return temperature;
 }
 
-String compileJSON(array sensorValues){
+String compileJSON(float *psensorValues){
   String jsonString = "{";
   for (int i=0; i<5; i++){
-    jsonString = jsonString + "\"s"+ i + "\": " + sensorValues[i] + ",";
+    jsonString = jsonString + "\"s"+ i + "\": " + psensorValues[i] + ",";
   }
   jsonString.remove((jsonString.length() - 1));
   jsonString = jsonString + "}";
-  return jsonString
+  return jsonString;
 }
 
-void keenWrite(String jsonString) {
-  keen.addEvent("readings", jsonString);
+void keenWrite(String collection, String jsonString) {
+  keen.addEvent(collection, jsonString);
   ledFlash();
 }
 
