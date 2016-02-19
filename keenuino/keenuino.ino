@@ -2,7 +2,7 @@
 #include <Bridge.h>
 #include <ApiClient.h>
 #include <KeenClient.h>
-#include <keys.h>
+#include "keys.h"
 
 const int totalAnlgSensors = 5;
 const String collectionName = "readings"
