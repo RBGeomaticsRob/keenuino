@@ -4,10 +4,7 @@
 #include <KeenClient.h>
 #include "keys.h"
 
-int sensorValue = 0;
-float voltageValue = 0.0;
-float temperature = 0.0;
-String jsonString = "{";
+int totalAnlgSensors = 5;
 
 KeenClient keen;
 
@@ -20,8 +17,17 @@ void setup() {
 }
 
 void loop() {
-  readTemps();
-  keenWrite();
+  float sensorValues[totalAnlgSensors];
+  String jsonWriteString;
+  
+  readAnalogSensors(&sensorValues);
+  
+  convertArrayValues(&sensorValues);
+  
+  jsonWriteString = compileJSON(sensorValues);
+  
+  keenWrite(jsonWriteString);
+  
   delay(30000);
 }
 
@@ -31,19 +37,37 @@ void keenSetup() {
   keen.setWriteKey(F(KEENWRITEKEY));
 }
 
-void readTemps() {
-  jsonString = "{";
-  for (int i=0; i<5; i++) {
-    sensorValue = analogRead(i);
-    voltageValue = sensorValue * (5000/1024);
-    temperature = (voltageValue - 500)/10;
-    jsonString = jsonString + "\"s"+ i + "\": " + temperature + ",";
+void readAnalogSensors(float *psensorValues){
+  for (int i=0; i<totalAnlgSensors; i++){
+    psensorValues[i] = analogRead(i);
+  }
+}
+
+void convertArrayValues(float *psensorValues){
+  for (int i=0; i<totalAnlgSensors; i++){
+    psensorValues[i] = convertValue(psensorValues[i]);
+  }
+}
+
+float convertValue(float sensorValue){
+  float voltageValue;
+  float temperature;
+  voltageValue = sensorValue * (5000/1024); //5000 for 5V, 3300 for 3.3V
+  temperature = (voltageValue - 500)/10;
+  return temperature;
+}
+
+String compileJSON(array sensorValues){
+  String jsonString = "{";
+  for (int i=0; i<5; i++){
+    jsonString = jsonString + "\"s"+ i + "\": " + sensorValues[i] + ",";
   }
   jsonString.remove((jsonString.length() - 1));
   jsonString = jsonString + "}";
+  return jsonString
 }
 
-void keenWrite() {
+void keenWrite(String jsonString) {
   keen.addEvent("readings", jsonString);
   ledFlash();
 }
